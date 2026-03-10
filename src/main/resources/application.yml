@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: chess-platform
+
+  # ─── MySQL Database ───────────────────────────────────────────────────────────
+  datasource:
+    url: jdbc:mysql://localhost:3306/chess_platform?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: root          # change to your MySQL Workbench username
+    password: Ayush.2006     # change to your MySQL Workbench password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    hibernate:
+      ddl-auto: update      # auto-creates / updates tables on startup
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+server:
+  port: 1111
+
+# ─── JWT ──────────────────────────────────────────────────────────────────────
+jwt:
+  secret: chess-platform-super-secret-key-that-is-long-enough-for-hs256-algorithm
+  expiration: 86400000
+
+# ─── Chess Settings ───────────────────────────────────────────────────────────
+chess:
+  matchmaking:
+    timeout-seconds: 60
+    check-interval-seconds: 5
+  ai:
+    max-depth: 4
+
+logging:
+  level:
+    com.chessplatform: DEBUG

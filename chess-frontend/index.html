@@ -1,0 +1,2018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ChessForge | Premium Chess</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+
+/* ═══════════════════════════════════════════════════
+   DESIGN SYSTEM — OBSIDIAN GOLD
+═══════════════════════════════════════════════════ */
+:root {
+  --bg:           #06070d;
+  --bg2:          #0b0d16;
+  --surface:      #10131e;
+  --surface2:     #161a27;
+  --surface3:     #1e2333;
+  --border:       rgba(255,255,255,0.06);
+  --border-gold:  rgba(212,175,55,0.25);
+
+  --gold:         #d4af37;
+  --gold-bright:  #f0c929;
+  --gold-dim:     rgba(212,175,55,0.12);
+  --gold-glow:    rgba(212,175,55,0.35);
+
+  --text:         #eef0f5;
+  --text-dim:     #7a849a;
+  --text-muted:   #3d4560;
+
+  --red:          #e05555;
+  --green:        #2dd4a4;
+  --blue:         #4a9eff;
+
+  --board-light:  #f0d9b5;
+  --board-dark:   #b58863;
+  --sq-size:      min(64px, 11vw);
+
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+  --r-xl: 24px;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring:   cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* ── Reset ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { height: 100%; }
+body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Ambient canvas glow */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 10% 0%, rgba(212,175,55,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 90% 100%, rgba(74,158,255,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 50% at 50% 50%, rgba(16,19,30,0.8) 0%, transparent 100%);
+  pointer-events: none; z-index: 0;
+}
+
+/* Noise texture overlay */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 0; opacity: 0.4;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 10px; }
+
+.hidden { display: none !important; }
+h1, h2, h3, h4 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* ═══════════════════════════════════════════════════
+   UTILITY CLASSES
+═══════════════════════════════════════════════════ */
+.mono { font-family: 'DM Mono', monospace; }
+.gold { color: var(--gold); }
+.center-abs { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+/* ═══════════════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  padding: 0.7rem 1.4rem;
+  border: none; border-radius: var(--r-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.78rem; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.22s var(--ease-out-expo);
+  position: relative; overflow: hidden;
+  white-space: nowrap;
+}
+.btn::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,0);
+  transition: background 0.2s;
+}
+.btn:hover::after { background: rgba(255,255,255,0.04); }
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+.btn-gold {
+  background: linear-gradient(135deg, #c9a227 0%, #e8c442 50%, #c08c1a 100%);
+  color: #000;
+  font-weight: 700;
+  box-shadow: 0 2px 20px rgba(212,175,55,0.25), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.btn-gold:hover {
+  box-shadow: 0 4px 30px rgba(212,175,55,0.4), inset 0 1px 0 rgba(255,255,255,0.25);
+  transform: translateY(-2px);
+}
+.btn-gold:active { transform: scale(0.97) translateY(0); }
+
+.btn-ghost {
+  background: var(--surface2);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover {
+  background: var(--surface3);
+  border-color: var(--border-gold);
+  color: var(--text);
+}
+
+.btn-danger {
+  background: rgba(224,85,85,0.08);
+  border: 1px solid rgba(224,85,85,0.2);
+  color: var(--red);
+}
+.btn-danger:hover {
+  background: rgba(224,85,85,0.15);
+  border-color: var(--red);
+  box-shadow: 0 0 20px rgba(224,85,85,0.15);
+}
+
+.btn-full { width: 100%; }
+.btn-sm { padding: 0.5rem 0.9rem; font-size: 0.72rem; }
+.btn-icon { padding: 0.6rem; border-radius: var(--r-sm); }
+
+/* ═══════════════════════════════════════════════════
+   FORM ELEMENTS
+═══════════════════════════════════════════════════ */
+.field { margin-bottom: 1.1rem; }
+.field label {
+  display: block;
+  font-size: 0.7rem; font-weight: 600;
+  color: var(--text-dim);
+  margin-bottom: 0.45rem;
+  text-transform: uppercase; letter-spacing: 0.1em;
+}
+.field input {
+  width: 100%;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 0.8rem 1rem;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.2s;
+}
+.field input:focus {
+  border-color: var(--gold);
+  background: rgba(212,175,55,0.04);
+  box-shadow: 0 0 0 3px rgba(212,175,55,0.1);
+}
+.field input::placeholder { color: var(--text-muted); }
+
+.err-box {
+  background: rgba(224,85,85,0.08);
+  border-left: 3px solid var(--red);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 0.7rem 1rem;
+  font-size: 0.82rem; color: #f7a5a5;
+  margin-bottom: 1.2rem;
+  display: none;
+  animation: slideDown 0.2s ease;
+}
+
+/* ═══════════════════════════════════════════════════
+   TOASTS
+═══════════════════════════════════════════════════ */
+#toasts {
+  position: fixed; bottom: 1.5rem; left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex; flex-direction: column-reverse; gap: 0.5rem;
+  pointer-events: none;
+  min-width: 260px;
+}
+.toast {
+  background: rgba(22,26,39,0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 0.75rem 1.25rem;
+  font-size: 0.84rem; font-weight: 500;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+  animation: toastIn 0.35s var(--ease-spring) forwards;
+  pointer-events: auto;
+  display: flex; align-items: center; gap: 0.75rem;
+}
+.toast::before { font-size: 1rem; flex-shrink: 0; }
+.toast.success::before { content: '✓'; color: var(--green); }
+.toast.error::before { content: '✕'; color: var(--red); }
+.toast.info::before { content: '◈'; color: var(--gold); }
+.toast.out { animation: toastOut 0.2s ease forwards; }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes toastOut {
+  to { opacity: 0; transform: translateY(8px) scale(0.97); }
+}
+
+/* ═══════════════════════════════════════════════════
+   OVERLAYS & MODALS
+═══════════════════════════════════════════════════ */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(6,7,13,0.85);
+  backdrop-filter: blur(12px);
+  display: none; align-items: center; justify-content: center;
+  z-index: 1000;
+  opacity: 0; transition: opacity 0.25s;
+}
+.overlay.open { display: flex; opacity: 1; }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--r-xl);
+  padding: 2.5rem;
+  width: 90%; max-width: 400px;
+  text-align: center;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.7), 0 0 60px rgba(212,175,55,0.08);
+  transform: translateY(20px) scale(0.97);
+  transition: transform 0.35s var(--ease-spring);
+  position: relative; overflow: hidden;
+}
+.modal::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0.6;
+}
+.overlay.open .modal { transform: translateY(0) scale(1); }
+.modal h2 { font-size: 2.2rem; margin-bottom: 0.5rem; color: var(--text); }
+.modal p { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 2rem; line-height: 1.6; }
+.modal-actions { display: flex; gap: 0.75rem; }
+
+/* ═══════════════════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════════════════ */
+#app { height: 100vh; display: flex; flex-direction: column; position: relative; z-index: 1; }
+.page { display: none; flex: 1; overflow: hidden; }
+.page.active { display: flex; flex-direction: column; animation: pageFadeIn 0.4s var(--ease-out-expo); }
+
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════════════
+   NAVBAR
+═══════════════════════════════════════════════════ */
+.navbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1.5rem; height: 60px;
+  background: rgba(11,13,22,0.7);
+  backdrop-filter: blur(20px) saturate(1.5);
+  border-bottom: 1px solid var(--border);
+  z-index: 100; flex-shrink: 0;
+  position: relative;
+}
+.navbar::after {
+  content: '';
+  position: absolute; bottom: -1px; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--gold-glow) 50%, transparent 100%);
+  opacity: 0.4;
+}
+
+.nav-brand {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem; font-weight: 700;
+  color: var(--text);
+  display: flex; align-items: center; gap: 0.4rem;
+  letter-spacing: -0.01em;
+}
+.nav-brand .brand-icon {
+  color: var(--gold);
+  font-size: 1.6rem;
+  filter: drop-shadow(0 0 8px var(--gold-glow));
+}
+.nav-brand .brand-suffix { color: var(--gold); }
+
+.nav-right { display: flex; align-items: center; gap: 1rem; }
+
+.nav-link {
+  background: none; border: none;
+  color: var(--text-muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem; font-weight: 500;
+  cursor: pointer;
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--r-sm);
+  transition: all 0.2s;
+  letter-spacing: 0.02em;
+  position: relative;
+}
+.nav-link:hover { color: var(--text); background: var(--surface2); }
+.nav-link.active { color: var(--text); }
+.nav-link.active::after {
+  content: '';
+  position: absolute; bottom: -10px; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  border-radius: 1px;
+}
+
+.user-chip {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.3rem 0.7rem 0.3rem 0.4rem;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 50px;
+  transition: border-color 0.2s;
+}
+.user-chip:hover { border-color: var(--border-gold); }
+.user-chip .avatar {
+  width: 24px; height: 24px;
+  background: linear-gradient(135deg, var(--gold), #b8901b);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.65rem; font-weight: 700; color: #000;
+  font-family: 'DM Sans', sans-serif;
+}
+.user-chip .uname { font-size: 0.78rem; font-weight: 600; color: var(--text); }
+.user-chip .urat {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem; color: var(--gold);
+  background: var(--gold-dim);
+  padding: 1px 5px; border-radius: 3px;
+}
+
+/* ═══════════════════════════════════════════════════
+   AUTH PAGE
+═══════════════════════════════════════════════════ */
+#auth-page {
+  align-items: center; justify-content: center;
+  background:
+    radial-gradient(ellipse 100% 70% at 50% 0%, rgba(212,175,55,0.06) 0%, transparent 60%),
+    var(--bg);
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.auth-container {
+  width: 100%; max-width: 420px;
+  display: flex; flex-direction: column; align-items: center; gap: 2rem;
+}
+
+.auth-hero { text-align: center; }
+.chess-logo {
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 80px; height: 80px; margin-bottom: 1.25rem;
+}
+.chess-logo::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(circle, var(--gold-glow) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: logoGlow 3s ease-in-out infinite;
+}
+.chess-logo-icon {
+  font-size: 3.8rem;
+  color: var(--gold);
+  position: relative; z-index: 1;
+  filter: drop-shadow(0 0 15px var(--gold-glow));
+  animation: logoFloat 4s ease-in-out infinite;
+}
+
+@keyframes logoGlow {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.2); opacity: 1; }
+}
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.auth-hero h1 {
+  font-size: 3rem;
+  background: linear-gradient(135deg, var(--text) 0%, var(--gold) 60%, var(--text) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.3rem;
+}
+.auth-hero .tagline {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+/* Auth card */
+.auth-card {
+  width: 100%;
+  background: rgba(16,19,30,0.6);
+  backdrop-filter: blur(30px);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.02);
+  position: relative;
+}
+.auth-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--gold) 50%, transparent 100%);
+  opacity: 0.5;
+}
+
+.auth-tabs {
+  display: grid; grid-template-columns: 1fr 1fr;
+  background: rgba(0,0,0,0.3);
+  border-bottom: 1px solid var(--border);
+}
+.auth-tab {
+  padding: 0.9rem;
+  background: none; border: none;
+  color: var(--text-muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem; font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.05em;
+  position: relative;
+}
+.auth-tab.active {
+  color: var(--text);
+  background: rgba(212,175,55,0.04);
+}
+.auth-tab.active::after {
+  content: '';
+  position: absolute; bottom: -1px; left: 0; right: 0; height: 2px;
+  background: var(--gold);
+}
+.auth-tab:hover:not(.active) { color: var(--text-dim); }
+
+.auth-body { padding: 1.75rem; }
+.auth-form { animation: formIn 0.25s var(--ease-out-expo); }
+@keyframes formIn {
+  from { opacity: 0; transform: translateX(8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ═══════════════════════════════════════════════════
+   GAME PAGE LAYOUT
+═══════════════════════════════════════════════════ */
+.game-layout {
+  display: flex; flex: 1; overflow: hidden;
+}
+
+/* ── Left Sidebar ── */
+.sidebar {
+  width: 240px; flex-shrink: 0;
+  background: rgba(11,13,22,0.4);
+  border-right: 1px solid var(--border);
+  padding: 1.25rem;
+  display: flex; flex-direction: column; gap: 1.5rem;
+  overflow-y: auto;
+  transition: transform 0.3s var(--ease-out-expo);
+}
+
+.sec-label {
+  font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.sec-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* Quick Play buttons */
+.qp-btn {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 0.9rem;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  color: var(--text-dim);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem; font-weight: 500;
+  cursor: pointer; width: 100%;
+  transition: all 0.2s var(--ease-out-expo);
+  margin-bottom: 0.4rem;
+}
+.qp-btn .qp-left { display: flex; align-items: center; gap: 0.5rem; }
+.qp-btn .qp-icon { font-size: 1rem; }
+.qp-btn .qp-label { font-weight: 600; color: var(--text); font-size: 0.83rem; }
+.qp-btn .qp-time {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem; color: var(--gold);
+  background: var(--gold-dim);
+  padding: 2px 6px; border-radius: 3px;
+}
+.qp-btn:hover {
+  border-color: var(--border-gold);
+  background: var(--surface3);
+  transform: translateX(3px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+
+/* Leaderboard */
+.lb-row {
+  display: flex; align-items: center; gap: 0.7rem;
+  padding: 0.45rem 0.5rem;
+  border-radius: var(--r-sm);
+  transition: background 0.15s;
+  cursor: default;
+}
+.lb-row:hover { background: var(--surface2); }
+.lb-rank {
+  width: 1.6rem; text-align: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem; font-weight: 700;
+  color: var(--text-muted);
+}
+.lb-row:nth-child(1) .lb-rank { color: #f7c61b; }
+.lb-row:nth-child(2) .lb-rank { color: #b0c4d8; }
+.lb-row:nth-child(3) .lb-rank { color: #c87941; }
+.lb-name { flex: 1; font-size: 0.83rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-elo { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--text-dim); }
+
+/* ── Right Panel ── */
+.right-panel {
+  width: 260px; flex-shrink: 0;
+  background: rgba(11,13,22,0.4);
+  border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+}
+
+.panel-hdr {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.68rem; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text-muted);
+  display: flex; align-items: center; gap: 0.5rem;
+  flex-shrink: 0;
+}
+.panel-hdr-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 6px var(--gold-glow);
+}
+
+.move-history {
+  flex: 1; overflow-y: auto;
+  padding: 0.75rem;
+}
+
+.move-pair {
+  display: grid;
+  grid-template-columns: 2.2rem 1fr 1fr;
+  gap: 0.25rem;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.02);
+  align-items: center;
+}
+.mv-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.73rem; color: var(--text-muted);
+  text-align: right; padding-right: 0.4rem;
+  user-select: none;
+}
+.mv-san {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--text-dim);
+}
+.mv-san:hover { background: var(--surface3); color: var(--text); }
+.mv-san.cur {
+  background: var(--gold);
+  color: #000; font-weight: 700;
+  box-shadow: 0 2px 8px rgba(212,175,55,0.3);
+}
+
+.panel-status {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border);
+  background: rgba(0,0,0,0.15);
+  flex-shrink: 0;
+}
+.status-lbl { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.3rem; }
+.status-val { font-size: 0.88rem; font-weight: 600; color: var(--gold); display: flex; align-items: center; gap: 0.4rem; }
+.status-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--gold);
+  animation: statusPulse 2s ease-in-out infinite;
+}
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--gold-glow); }
+  50% { opacity: 0.4; box-shadow: none; }
+}
+
+/* ── Center Area ── */
+.center {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center;
+  padding: 1.5rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ═══════════════════════════════════════════════════
+   LOBBY
+═══════════════════════════════════════════════════ */
+#lobby {
+  flex-direction: column;
+  align-items: center; text-align: center;
+  max-width: 680px; width: 100%;
+  gap: 0;
+}
+
+.lobby-header { margin-bottom: 2.5rem; }
+.lobby-header h2 {
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  background: linear-gradient(135deg, var(--text) 20%, var(--gold) 80%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.4rem;
+}
+.lobby-header .sub { color: var(--text-dim); font-size: 0.92rem; }
+
+.mode-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem; width: 100%;
+  margin-bottom: 2.5rem;
+}
+
+.mode-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 2rem 1.25rem;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-out-expo);
+  position: relative; overflow: hidden;
+  text-align: center;
+}
+.mode-card-bg {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 0%, var(--gold-dim), transparent 70%);
+  opacity: 0; transition: opacity 0.3s;
+}
+.mode-card:hover { transform: translateY(-6px); border-color: var(--border-gold); box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 30px rgba(212,175,55,0.08); }
+.mode-card:hover .mode-card-bg { opacity: 1; }
+.mode-card:hover .mode-icon { transform: scale(1.15) translateY(-3px); }
+.mode-card:active { transform: translateY(-3px) scale(0.99); }
+
+.mode-icon {
+  font-size: 2.5rem;
+  display: block; margin-bottom: 0.75rem;
+  transition: transform 0.3s var(--ease-spring);
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+  position: relative; z-index: 1;
+}
+.mode-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem; font-weight: 700;
+  color: var(--text); margin-bottom: 0.15rem;
+  position: relative; z-index: 1;
+}
+.mode-time {
+  font-size: 0.78rem; color: var(--gold);
+  font-weight: 500; letter-spacing: 0.05em;
+  position: relative; z-index: 1;
+}
+
+.lobby-divider {
+  display: flex; align-items: center; gap: 1rem;
+  color: var(--text-muted); font-size: 0.72rem;
+  font-weight: 600; text-transform: uppercase; letter-spacing: 0.15em;
+  width: 100%; margin-bottom: 1.25rem;
+}
+.lobby-divider::before, .lobby-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.lobby-note {
+  color: var(--text-dim); font-size: 0.84rem;
+  background: var(--surface2);
+  padding: 0.65rem 1.5rem;
+  border-radius: 50px;
+  border: 1px dashed var(--border);
+  display: inline-flex; align-items: center; gap: 0.5rem;
+}
+
+/* ═══════════════════════════════════════════════════
+   BOARD VIEW
+═══════════════════════════════════════════════════ */
+#board-view {
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 580px;
+  gap: 0.75rem;
+}
+
+/* Player Bars */
+.player-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%;
+  padding: 0.65rem 1rem;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  gap: 0.75rem;
+  transition: border-color 0.3s;
+  min-height: 58px;
+}
+.player-bar.active-bar { border-color: var(--border-gold); box-shadow: 0 0 20px rgba(212,175,55,0.06); }
+
+.player-ident { display: flex; align-items: center; gap: 0.6rem; flex: 1; min-width: 0; }
+.player-icon {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; font-weight: 700;
+  flex-shrink: 0;
+}
+.player-icon.human {
+  background: linear-gradient(135deg, var(--gold), #9a7520);
+  color: #000;
+}
+.player-icon.ai {
+  background: linear-gradient(135deg, #2a3150, #1a2040);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 1.1rem;
+}
+.player-text { min-width: 0; }
+.player-name { font-size: 0.88rem; font-weight: 700; color: var(--text); line-height: 1.2; }
+.player-sub { font-size: 0.72rem; color: var(--text-dim); margin-top: 0.1rem; }
+
+.captured {
+  flex: 1; font-size: 0.9rem;
+  letter-spacing: -3px;
+  color: var(--text-muted);
+  text-align: center;
+  min-width: 0; overflow: hidden;
+  white-space: nowrap; text-overflow: ellipsis;
+}
+
+/* Clock */
+.clock {
+  font-family: 'DM Mono', monospace;
+  font-size: 1.5rem; font-weight: 700;
+  color: var(--text-muted);
+  background: var(--surface);
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--r-sm);
+  min-width: 5rem; text-align: center;
+  border: 1px solid var(--border);
+  transition: all 0.3s;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.4);
+  flex-shrink: 0;
+  letter-spacing: 0.04em;
+}
+.clock.active {
+  color: var(--text);
+  border-color: var(--border-gold);
+  background: rgba(212,175,55,0.05);
+  box-shadow: 0 0 20px var(--gold-dim), inset 0 2px 8px rgba(0,0,0,0.2);
+}
+.clock.low {
+  color: var(--red) !important;
+  border-color: rgba(224,85,85,0.5) !important;
+  background: rgba(224,85,85,0.08) !important;
+  animation: clockPulse 0.8s ease-in-out infinite;
+}
+@keyframes clockPulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(224,85,85,0.4); }
+  50% { box-shadow: 0 0 4px rgba(224,85,85,0.1); }
+}
+
+/* Board wrapper */
+.board-wrap {
+  width: 100%;
+  position: relative;
+}
+.board-frame {
+  padding: 8px;
+  background: var(--surface2);
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 30px 60px rgba(0,0,0,0.7),
+    0 0 40px rgba(212,175,55,0.06),
+    inset 0 1px 1px rgba(255,255,255,0.04);
+  position: relative;
+}
+.board-frame::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: var(--r-md);
+  background: linear-gradient(135deg, rgba(212,175,55,0.04) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+#chess-board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  width: 100%; aspect-ratio: 1/1;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.8);
+  user-select: none;
+}
+
+/* Squares */
+.sq {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  aspect-ratio: 1/1; overflow: hidden;
+  transition: filter 0.1s;
+}
+.sq.light { background: var(--board-light); }
+.sq.dark  { background: var(--board-dark); }
+
+.sq::after {
+  content: '';
+  position: absolute; inset: 0;
+  pointer-events: none;
+  transition: background 0.15s;
+  z-index: 2;
+}
+.sq.lm-from::after, .sq.lm-to::after { background: rgba(230,165,0,0.35); }
+.sq.sel::after {
+  background: rgba(255,230,50,0.22);
+  box-shadow: inset 0 0 0 3px rgba(255,220,0,0.55);
+}
+.sq.chk::after { background: radial-gradient(circle, rgba(224,85,85,0.85) 0%, rgba(224,85,85,0) 68%); }
+
+/* Move dots */
+.dot {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 28%; height: 28%;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.22);
+  pointer-events: none; z-index: 3;
+  animation: dotIn 0.15s var(--ease-spring);
+}
+.sq.cap .dot {
+  width: 88%; height: 88%;
+  background: transparent;
+  border: 4px solid rgba(0,0,0,0.2);
+}
+@keyframes dotIn {
+  from { transform: translate(-50%, -50%) scale(0); }
+  to   { transform: translate(-50%, -50%) scale(1); }
+}
+
+/* Pieces */
+.piece {
+  font-size: clamp(26px, 6.2vw, 52px);
+  line-height: 1;
+  pointer-events: none; z-index: 4;
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 100%;
+  transition: transform 0.2s var(--ease-spring), filter 0.2s;
+  animation: pieceIn 0.2s var(--ease-spring);
+  font-family: "Segoe UI Symbol", "Apple Color Emoji", "Arial Unicode MS", sans-serif;
+}
+.piece.white {
+  color: #f5f0e0;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+.piece.black {
+  color: #1a1a1a;
+  filter: drop-shadow(0 2px 3px rgba(255,255,255,0.15));
+}
+.sq:hover .piece { transform: translateY(-5px) scale(1.08); filter: drop-shadow(0 8px 12px rgba(0,0,0,0.6)); }
+
+@keyframes pieceIn {
+  from { transform: scale(0.75); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+/* Coordinates */
+.coord {
+  position: absolute;
+  font-size: clamp(8px, 1.1vw, 10px);
+  font-weight: 700; opacity: 0.55;
+  pointer-events: none; z-index: 5;
+  font-family: 'DM Mono', monospace;
+}
+.crank { top: 2px; left: 3px; }
+.cfile { bottom: 2px; right: 3px; }
+.sq.light .coord { color: var(--board-dark); }
+.sq.dark  .coord { color: var(--board-light); }
+
+/* Board controls */
+.board-ctrls {
+  display: flex; gap: 0.5rem;
+  width: 100%; justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ═══════════════════════════════════════════════════
+   PROMOTION MODAL
+═══════════════════════════════════════════════════ */
+.promo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-top: 1rem; }
+.promo-btn {
+  aspect-ratio: 1;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.5rem;
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring);
+}
+.promo-btn:hover {
+  border-color: var(--gold);
+  background: var(--surface3);
+  transform: scale(1.1) translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.4), 0 0 20px rgba(212,175,55,0.2);
+}
+
+/* ═══════════════════════════════════════════════════
+   PROFILE PAGE
+═══════════════════════════════════════════════════ */
+.prof-wrap { width: 100%; max-width: 820px; display: flex; flex-direction: column; gap: 1.5rem; }
+
+.prof-header {
+  display: flex; align-items: center; gap: 1.75rem;
+  padding: 2rem;
+  background: rgba(16,19,30,0.5);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  position: relative; overflow: hidden;
+  backdrop-filter: blur(20px);
+}
+.prof-header::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0.5;
+}
+.prof-header-bg {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 0% 50%, var(--gold-dim), transparent 60%);
+  pointer-events: none;
+}
+
+.prof-avatar {
+  width: 80px; height: 80px;
+  background: linear-gradient(135deg, var(--gold), #8a6510);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.2rem; font-weight: 700; color: #000;
+  flex-shrink: 0;
+  box-shadow: 0 0 30px rgba(212,175,55,0.4), 0 0 0 3px rgba(212,175,55,0.2);
+  position: relative; z-index: 1;
+}
+.prof-header h2 { font-size: 2rem; color: var(--text); position: relative; z-index: 1; }
+.prof-since { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; letter-spacing: 0.08em; text-transform: uppercase; }
+
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+.stat-card {
+  padding: 1.25rem;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  text-align: center;
+  transition: all 0.25s var(--ease-out-expo);
+  cursor: default;
+}
+.stat-card:hover { transform: translateY(-4px); border-color: var(--border-gold); box-shadow: 0 16px 32px rgba(0,0,0,0.3); }
+.stat-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 2.2rem; font-weight: 700;
+  color: var(--text); line-height: 1;
+  margin-bottom: 0.4rem;
+}
+.stat-card:first-child .stat-val { color: var(--gold); text-shadow: 0 0 20px var(--gold-dim); }
+.stat-lbl { font-size: 0.68rem; color: var(--text-dim); font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; }
+
+.history-wrap {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+.history-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.history-table th {
+  text-align: left; padding: 0.85rem 1.25rem;
+  background: rgba(0,0,0,0.2);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.15em; text-transform: uppercase;
+}
+.history-table td { padding: 0.85rem 1.25rem; border-bottom: 1px solid var(--border); color: var(--text); font-weight: 400; }
+.history-table tr:last-child td { border-bottom: none; }
+.history-table tbody tr { transition: background 0.15s; }
+.history-table tbody tr:hover td { background: rgba(255,255,255,0.02); }
+
+.badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0.25rem 0.55rem;
+  border-radius: 4px;
+  font-size: 0.68rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.badge-win  { background: rgba(45,212,164,0.1); color: var(--green); border: 1px solid rgba(45,212,164,0.25); }
+.badge-loss { background: rgba(224,85,85,0.1);  color: var(--red);   border: 1px solid rgba(224,85,85,0.25); }
+.badge-draw { background: var(--gold-dim);       color: var(--gold);  border: 1px solid var(--border-gold); }
+
+/* ═══════════════════════════════════════════════════
+   ANIMATIONS & TRANSITIONS
+═══════════════════════════════════════════════════ */
+@keyframes slideDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+.spinner {
+  width: 14px; height: 14px;
+  border: 2px solid rgba(0,0,0,0.15);
+  border-top-color: rgba(0,0,0,0.8);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  .sidebar { width: 200px; }
+  .right-panel { width: 220px; }
+}
+
+@media (max-width: 860px) {
+  .sidebar, .right-panel { display: none; }
+}
+
+@media (max-width: 600px) {
+  .navbar { padding: 0 1rem; height: 52px; }
+  .nav-brand { font-size: 1.2rem; }
+  .nav-link { font-size: 0.76rem; padding: 0.3rem 0.4rem; }
+  .user-chip .uname { display: none; }
+
+  .center { padding: 0.75rem; }
+
+  /* Lobby mobile */
+  .mode-grid { grid-template-columns: 1fr; max-width: 280px; gap: 0.75rem; }
+  .mode-card { padding: 1.25rem; display: flex; align-items: center; gap: 1rem; text-align: left; }
+  .mode-icon { font-size: 2rem; margin: 0; flex-shrink: 0; }
+
+  /* Board mobile */
+  #board-view { gap: 0.5rem; padding: 0; }
+  .player-bar { padding: 0.5rem 0.75rem; min-height: 50px; }
+  .player-icon { width: 28px; height: 28px; font-size: 0.7rem; }
+  .player-name { font-size: 0.8rem; }
+  .player-sub { display: none; }
+  .clock { font-size: 1.2rem; min-width: 4rem; padding: 0.25rem 0.5rem; }
+  .board-frame { padding: 5px; }
+  .board-ctrls { gap: 0.4rem; }
+  .btn-sm { padding: 0.4rem 0.7rem; font-size: 0.68rem; }
+
+  /* Stats grid 2col on mobile */
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .prof-header { flex-direction: column; text-align: center; gap: 1rem; }
+  .stat-val { font-size: 1.8rem; }
+  h1.auth-title { font-size: 2.5rem !important; }
+}
+
+@media (max-width: 380px) {
+  .board-ctrls .btn { font-size: 0.65rem; padding: 0.35rem 0.55rem; }
+  .clock { font-size: 1.1rem; min-width: 3.5rem; }
+}
+
+/* Mobile move history dropdown (hidden sidebar replacement) */
+.mobile-moves-toggle {
+  display: none;
+  position: fixed; bottom: 1rem; right: 1rem;
+  z-index: 500;
+}
+@media (max-width: 860px) {
+  .mobile-moves-toggle { display: flex; }
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+<!-- ════════════════════════════════════════════
+     AUTH PAGE
+════════════════════════════════════════════ -->
+<div id="auth-page" class="page active" style="display:flex">
+  <div class="auth-container">
+    <div class="auth-hero">
+      <div class="chess-logo">
+        <span class="chess-logo-icon">♟</span>
+      </div>
+      <h1 class="auth-title" style="font-size:3rem;background:linear-gradient(135deg,var(--text) 20%,var(--gold) 80%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.3rem">ChessForge</h1>
+      <p class="tagline">Play · Analyze · Master</p>
+    </div>
+
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-tab="login" onclick="switchTab('login')">Sign In</button>
+        <button class="auth-tab" data-tab="register" onclick="switchTab('register')">Register</button>
+      </div>
+
+      <div class="auth-body">
+        <div id="auth-err" class="err-box"></div>
+
+        <div id="login-form" class="auth-form">
+          <div class="field">
+            <label>Username</label>
+            <input type="text" id="l-user" placeholder="your_username" autocomplete="username">
+          </div>
+          <div class="field">
+            <label>Password</label>
+            <input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password">
+          </div>
+          <button class="btn btn-gold btn-full" id="btn-login" onclick="doLogin()" style="margin-top:.25rem">
+            Sign In
+          </button>
+        </div>
+
+        <div id="register-form" class="auth-form hidden">
+          <div class="field">
+            <label>Username</label>
+            <input type="text" id="r-user" placeholder="choose_username" autocomplete="username">
+          </div>
+          <div class="field">
+            <label>Email</label>
+            <input type="email" id="r-email" placeholder="you@email.com" autocomplete="email">
+          </div>
+          <div class="field">
+            <label>Password</label>
+            <input type="password" id="r-pass" placeholder="min 6 characters" autocomplete="new-password">
+          </div>
+          <button class="btn btn-gold btn-full" id="btn-register" onclick="doRegister()" style="margin-top:.25rem">
+            Create Account
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     GAME PAGE
+════════════════════════════════════════════ -->
+<div id="game-page" class="page">
+  <nav class="navbar">
+    <div class="nav-brand">
+      <span class="brand-icon">♟</span>
+      Chess<span class="brand-suffix">Forge</span>
+    </div>
+    <div class="nav-right">
+      <button class="nav-link active" onclick="showLobby()">Play</button>
+      <button class="nav-link" onclick="showProfile()">Profile</button>
+      <div class="user-chip">
+        <div class="avatar" id="nav-avatar">A</div>
+        <span class="uname" id="nav-uname">—</span>
+        <span class="urat" id="nav-urat">1200</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="game-layout">
+    <!-- Left Sidebar -->
+    <aside class="sidebar">
+      <div>
+        <div class="sec-label">Quick Play</div>
+        <button class="qp-btn" onclick="startGame('BULLET')">
+          <div class="qp-left"><span class="qp-icon">⚡</span><span class="qp-label">Bullet</span></div>
+          <span class="qp-time">1 min</span>
+        </button>
+        <button class="qp-btn" onclick="startGame('BLITZ')">
+          <div class="qp-left"><span class="qp-icon">🔥</span><span class="qp-label">Blitz</span></div>
+          <span class="qp-time">5 min</span>
+        </button>
+        <button class="qp-btn" onclick="startGame('RAPID')">
+          <div class="qp-left"><span class="qp-icon">🕐</span><span class="qp-label">Rapid</span></div>
+          <span class="qp-time">10 min</span>
+        </button>
+      </div>
+      <div>
+        <div class="sec-label">Leaderboard</div>
+        <div id="sidebar-lb"><span style="color:var(--text-muted);font-size:0.78rem">Loading…</span></div>
+      </div>
+    </aside>
+
+    <!-- Center -->
+    <div class="center">
+
+      <!-- LOBBY -->
+      <div id="lobby" style="display:flex">
+        <div class="lobby-header">
+          <h2>Choose Your Battle</h2>
+          <p class="sub">Challenge the engine. Prove your mastery.</p>
+        </div>
+        <div class="mode-grid">
+          <div class="mode-card" onclick="startGame('BULLET')" style="animation:pageFadeIn 0.4s ease 0.05s backwards">
+            <div class="mode-card-bg"></div>
+            <span class="mode-icon">⚡</span>
+            <div>
+              <div class="mode-name">Bullet</div>
+              <div class="mode-time">1 minute</div>
+            </div>
+          </div>
+          <div class="mode-card" onclick="startGame('BLITZ')" style="animation:pageFadeIn 0.4s ease 0.12s backwards">
+            <div class="mode-card-bg"></div>
+            <span class="mode-icon">🔥</span>
+            <div>
+              <div class="mode-name">Blitz</div>
+              <div class="mode-time">5 minutes</div>
+            </div>
+          </div>
+          <div class="mode-card" onclick="startGame('RAPID')" style="animation:pageFadeIn 0.4s ease 0.19s backwards">
+            <div class="mode-card-bg"></div>
+            <span class="mode-icon">🕐</span>
+            <div>
+              <div class="mode-name">Rapid</div>
+              <div class="mode-time">10 minutes</div>
+            </div>
+          </div>
+        </div>
+        <div class="lobby-divider">or</div>
+        <div class="lobby-note">
+          <span>🌐</span> Multiplayer matchmaking — coming soon
+        </div>
+      </div>
+
+      <!-- BOARD VIEW -->
+      <div id="board-view" class="hidden">
+        <!-- Opponent (Black) -->
+        <div class="player-bar" id="bar-black">
+          <div class="player-ident">
+            <div class="player-icon ai">🤖</div>
+            <div class="player-text">
+              <div class="player-name" id="b-name">AI Engine</div>
+              <div class="player-sub" id="b-sub">Minimax Depth 4</div>
+            </div>
+          </div>
+          <div class="captured" id="b-captured"></div>
+          <div class="clock" id="b-clock">5:00</div>
+        </div>
+
+        <!-- Board -->
+        <div class="board-wrap">
+          <div class="board-frame">
+            <div id="chess-board"></div>
+          </div>
+        </div>
+
+        <!-- Player (White) -->
+        <div class="player-bar" id="bar-white">
+          <div class="player-ident">
+            <div class="player-icon human" id="w-avatar">Y</div>
+            <div class="player-text">
+              <div class="player-name" id="w-name">You</div>
+              <div class="player-sub" id="w-sub">White · 1200</div>
+            </div>
+          </div>
+          <div class="captured" id="w-captured"></div>
+          <div class="clock" id="w-clock">5:00</div>
+        </div>
+
+        <!-- Controls -->
+        <div class="board-ctrls">
+          <button class="btn btn-ghost btn-sm" onclick="showLobby()">← Menu</button>
+          <button class="btn btn-danger btn-sm" onclick="resignGame()">⚑ Resign</button>
+          <button class="btn btn-ghost btn-sm" onclick="downloadPgn()">⬇ PGN</button>
+        </div>
+      </div>
+
+    </div><!-- /center -->
+
+    <!-- Right Panel -->
+    <div class="right-panel">
+      <div class="panel-hdr">
+        <div class="panel-hdr-dot"></div>
+        Move History
+      </div>
+      <div class="move-history" id="move-history"></div>
+      <div class="panel-status">
+        <div class="status-lbl">Engine</div>
+        <div class="status-val">
+          <div class="status-dot"></div>
+          <span id="status-text">Awaiting game</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     PROFILE PAGE
+════════════════════════════════════════════ -->
+<div id="profile-page" class="page">
+  <nav class="navbar">
+    <div class="nav-brand">
+      <span class="brand-icon">♟</span>
+      Chess<span class="brand-suffix">Forge</span>
+    </div>
+    <div class="nav-right">
+      <button class="nav-link" onclick="showLobby()">Play</button>
+      <button class="nav-link active">Profile</button>
+      <div class="user-chip">
+        <div class="avatar" id="prof-nav-avatar">A</div>
+        <span class="uname" id="prof-nav-uname">—</span>
+        <span class="urat" id="prof-nav-urat">1200</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">Logout</button>
+    </div>
+  </nav>
+  <div class="game-layout">
+    <div class="center" style="align-items:flex-start;overflow-y:auto;padding:1.5rem 2rem;justify-content:center">
+      <div class="prof-wrap">
+        <div class="prof-header">
+          <div class="prof-header-bg"></div>
+          <div class="prof-avatar" id="prof-avatar">A</div>
+          <div style="position:relative;z-index:1">
+            <h2 id="prof-username">—</h2>
+            <div class="prof-since" id="prof-since"></div>
+          </div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card" style="animation:pageFadeIn 0.4s ease 0.0s backwards">
+            <div class="stat-val" id="s-rating">—</div>
+            <div class="stat-lbl">Rating</div>
+          </div>
+          <div class="stat-card" style="animation:pageFadeIn 0.4s ease 0.06s backwards">
+            <div class="stat-val" id="s-played">—</div>
+            <div class="stat-lbl">Played</div>
+          </div>
+          <div class="stat-card" style="animation:pageFadeIn 0.4s ease 0.12s backwards">
+            <div class="stat-val" id="s-won">—</div>
+            <div class="stat-lbl">Won</div>
+          </div>
+          <div class="stat-card" style="animation:pageFadeIn 0.4s ease 0.18s backwards">
+            <div class="stat-val" id="s-rate">—</div>
+            <div class="stat-lbl">Win Rate</div>
+          </div>
+        </div>
+        <div class="history-wrap">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Mode</th><th>Opponent</th><th>Result</th><th>Moves</th><th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="history-body">
+              <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:2rem">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /#app -->
+
+<!-- ════════════════════════════════════════════
+     MODALS
+════════════════════════════════════════════ -->
+<div class="overlay" id="go-modal">
+  <div class="modal">
+    <div style="font-size:3rem;margin-bottom:.75rem" id="go-icon">♟</div>
+    <h2 id="go-title">Game Over</h2>
+    <p id="go-msg">—</p>
+    <div class="modal-actions">
+      <button class="btn btn-gold btn-full" onclick="playAgain()">Play Again</button>
+      <button class="btn btn-ghost btn-full" onclick="closeModal('go-modal');showLobby()">Menu</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="promo-modal">
+  <div class="modal">
+    <h2>Promote Pawn</h2>
+    <p>Choose your promotion piece</p>
+    <div class="promo-grid" id="promo-grid"></div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+// ════════════════════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════════════════════
+const API = 'http://localhost:1111';
+
+const GLYPHS = {
+  WHITE: { KING:'♔', QUEEN:'♕', ROOK:'♖', BISHOP:'♗', KNIGHT:'♘', PAWN:'♙' },
+  BLACK: { KING:'♚', QUEEN:'♛', ROOK:'♜', BISHOP:'♝', KNIGHT:'♞', PAWN:'♟' }
+};
+
+// ════════════════════════════════════════════════════════
+// STORE
+// ════════════════════════════════════════════════════════
+const Store = {
+  getToken: () => localStorage.getItem('cf_tok'),
+  setToken: (t) => localStorage.setItem('cf_tok', t),
+  getUser: () => { const u = localStorage.getItem('cf_usr'); return u ? JSON.parse(u) : null; },
+  setUser: (u) => localStorage.setItem('cf_usr', JSON.stringify(u)),
+  clear: () => { localStorage.removeItem('cf_tok'); localStorage.removeItem('cf_usr'); },
+  isAuth: () => !!localStorage.getItem('cf_tok')
+};
+
+// ════════════════════════════════════════════════════════
+// API
+// ════════════════════════════════════════════════════════
+async function api(path, method = 'GET', body = null) {
+  const h = { 'Content-Type': 'application/json' };
+  const tok = Store.getToken();
+  if (tok) h['Authorization'] = 'Bearer ' + tok;
+  const cfg = { method, headers: h };
+  if (body) cfg.body = JSON.stringify(body);
+  try {
+    const r = await fetch(API + path, cfg);
+    const d = await r.json();
+    return { ok: r.ok, status: r.status, data: d };
+  } catch (e) {
+    return { ok: false, status: 0, data: { message: 'Network error — is the Spring Boot server running on port 1111?' } };
+  }
+}
+
+// ════════════════════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════════════════════
+function toast(msg, type = 'info', dur = 3200) {
+  const c = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, dur);
+}
+
+// ════════════════════════════════════════════════════════
+// MODALS
+// ════════════════════════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.addEventListener('click', e => { if (e.target.classList.contains('overlay')) e.target.classList.remove('open'); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.overlay.open').forEach(o => o.classList.remove('open')); });
+
+// ════════════════════════════════════════════════════════
+// PAGES & TABS
+// ════════════════════════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => { p.classList.remove('active'); p.style.display = ''; });
+  const p = document.getElementById(id);
+  p.classList.add('active');
+  p.style.display = 'flex';
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.getElementById('login-form').classList.toggle('hidden', tab !== 'login');
+  document.getElementById('register-form').classList.toggle('hidden', tab !== 'register');
+  setErr('');
+}
+
+// ════════════════════════════════════════════════════════
+// AUTH
+// ════════════════════════════════════════════════════════
+function setErr(msg) {
+  const el = document.getElementById('auth-err');
+  el.textContent = msg;
+  el.style.display = msg ? 'block' : 'none';
+}
+
+async function doLogin() {
+  const user = document.getElementById('l-user').value.trim();
+  const pass = document.getElementById('l-pass').value;
+  if (!user || !pass) { setErr('Please fill in all fields'); return; }
+  const btn = document.getElementById('btn-login');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>&nbsp; Signing in…';
+  const { ok, data } = await api('/api/auth/login', 'POST', { username: user, password: pass });
+  btn.disabled = false; btn.textContent = 'Sign In';
+  if (!ok) { setErr(data.message || 'Login failed'); return; }
+  Store.setToken(data.data.accessToken); Store.setUser(data.data);
+  setErr(''); toast('Welcome back, ' + data.data.username + '!', 'success');
+  enterApp();
+}
+
+async function doRegister() {
+  const user = document.getElementById('r-user').value.trim();
+  const email = document.getElementById('r-email').value.trim();
+  const pass = document.getElementById('r-pass').value;
+  if (!user || !email || !pass) { setErr('Please fill in all fields'); return; }
+  if (pass.length < 6) { setErr('Password must be at least 6 characters'); return; }
+  if (!email.includes('@')) { setErr('Enter a valid email address'); return; }
+  const btn = document.getElementById('btn-register');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>&nbsp; Creating…';
+  const { ok, data } = await api('/api/auth/register', 'POST', { username: user, email, password: pass });
+  btn.disabled = false; btn.textContent = 'Create Account';
+  if (!ok) { setErr(data.message || 'Registration failed'); return; }
+  Store.setToken(data.data.accessToken); Store.setUser(data.data);
+  setErr(''); toast('Account created! Welcome to ChessForge!', 'success');
+  enterApp();
+}
+
+function doLogout() {
+  clockStop(); Store.clear();
+  showPage('auth-page');
+  switchTab('login');
+}
+
+// ════════════════════════════════════════════════════════
+// APP ENTRY
+// ════════════════════════════════════════════════════════
+function enterApp() {
+  const u = Store.getUser(); if (!u) return;
+  const initial = u.username[0].toUpperCase();
+  ['nav-uname', 'prof-nav-uname'].forEach(id => document.getElementById(id).textContent = u.username);
+  ['nav-urat', 'prof-nav-urat'].forEach(id => document.getElementById(id).textContent = u.rating);
+  ['nav-avatar', 'prof-nav-avatar'].forEach(id => document.getElementById(id).textContent = initial);
+  showPage('game-page');
+  showLobby();
+  loadLeaderboard();
+}
+
+// ════════════════════════════════════════════════════════
+// LEADERBOARD
+// ════════════════════════════════════════════════════════
+async function loadLeaderboard() {
+  const { ok, data } = await api('/api/leaderboard?size=8');
+  if (!ok) return;
+  const el = document.getElementById('sidebar-lb');
+  el.innerHTML = (data.data || []).map(e => `
+    <div class="lb-row">
+      <span class="lb-rank">#${e.rank}</span>
+      <span class="lb-name">${e.username}</span>
+      <span class="lb-elo">${e.rating}</span>
+    </div>`).join('') || '<span style="color:var(--text-muted);font-size:0.78rem">No players yet</span>';
+}
+
+// ════════════════════════════════════════════════════════
+// CHESS STATE
+// ════════════════════════════════════════════════════════
+let boardState = {};
+let turnFen = 'WHITE';
+let epSquare = null;
+let selectedSq = null;
+let legalHints = [];
+let lastMove = null;
+let checkSq = null;
+let fenHistory = [];
+
+function parseFen(fen) {
+  boardState = {};
+  const [pos, turn, , ep] = fen.split(' ');
+  const TM = { k:'KING', q:'QUEEN', r:'ROOK', b:'BISHOP', n:'KNIGHT', p:'PAWN' };
+  pos.split('/').forEach((row, ri) => {
+    let c = 0;
+    for (const ch of row) {
+      if (/\d/.test(ch)) c += +ch;
+      else {
+        boardState[sqN(7 - ri, c)] = { type: TM[ch.toLowerCase()], color: ch === ch.toUpperCase() ? 'WHITE' : 'BLACK' };
+        c++;
+      }
+    }
+  });
+  turnFen = turn === 'w' ? 'WHITE' : 'BLACK';
+  epSquare = ep !== '-' ? ep : null;
+}
+
+function sqN(r, c) { return String.fromCharCode(97 + c) + (r + 1); }
+function sqR(sq) { return +sq[1] - 1; }
+function sqC(sq) { return sq.charCodeAt(0) - 97; }
+function sqOk(r, c) { return r >= 0 && r <= 7 && c >= 0 && c <= 7; }
+
+function getMoveHints(sq) {
+  const p = boardState[sq]; if (!p) return [];
+  const moves = [];
+  const r = sqR(sq), c = sqC(sq);
+  const add = (rr, cc) => {
+    if (!sqOk(rr, cc)) return false;
+    const s = sqN(rr, cc);
+    if (boardState[s] && boardState[s].color === p.color) return false;
+    moves.push(s); return !boardState[s];
+  };
+  const slide = (dr, dc) => { for (let i = 1; i < 8; i++) if (!add(r + dr * i, c + dc * i)) break; };
+  switch (p.type) {
+    case 'PAWN': {
+      const d = p.color === 'WHITE' ? 1 : -1, sr = p.color === 'WHITE' ? 1 : 6;
+      const f1 = sqN(r + d, c);
+      if (sqOk(r + d, c) && !boardState[f1]) { moves.push(f1); const f2 = sqN(r + 2 * d, c); if (r === sr && !boardState[f2]) moves.push(f2); }
+      [-1, 1].forEach(dc => { if (sqOk(r + d, c + dc)) { const s = sqN(r + d, c + dc); if ((boardState[s] && boardState[s].color !== p.color) || s === epSquare) moves.push(s); } });
+      break;
+    }
+    case 'KNIGHT': [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(([dr,dc]) => add(r+dr, c+dc)); break;
+    case 'BISHOP': slide(1,1); slide(1,-1); slide(-1,1); slide(-1,-1); break;
+    case 'ROOK':   slide(1,0); slide(-1,0); slide(0,1); slide(0,-1); break;
+    case 'QUEEN':  slide(1,1); slide(1,-1); slide(-1,1); slide(-1,-1); slide(1,0); slide(-1,0); slide(0,1); slide(0,-1); break;
+    case 'KING':
+      [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]].forEach(([dr,dc]) => add(r+dr, c+dc));
+      if (!boardState[sqN(r,5)] && !boardState[sqN(r,6)]) moves.push(sqN(r,6));
+      if (!boardState[sqN(r,3)] && !boardState[sqN(r,2)] && !boardState[sqN(r,1)]) moves.push(sqN(r,2));
+      break;
+  }
+  return moves;
+}
+
+function findKing(color) {
+  for (const [sq, p] of Object.entries(boardState)) if (p.type === 'KING' && p.color === color) return sq;
+  return null;
+}
+
+function getCaptured() {
+  const start = { PAWN:8, KNIGHT:2, BISHOP:2, ROOK:2, QUEEN:1 };
+  const cur = { WHITE:{}, BLACK:{} };
+  for (const p of Object.values(boardState)) cur[p.color][p.type] = (cur[p.color][p.type] || 0) + 1;
+  const cap = { WHITE:[], BLACK:[] };
+  for (const color of ['WHITE','BLACK'])
+    for (const [t, n] of Object.entries(start)) {
+      const lost = n - (cur[color][t] || 0);
+      for (let i = 0; i < lost; i++) cap[color].push(GLYPHS[color][t]);
+    }
+  return cap;
+}
+
+// ════════════════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════════════════
+function renderBoard() {
+  const el = document.getElementById('chess-board');
+  el.innerHTML = '';
+  for (let row = 7; row >= 0; row--) {
+    for (let col = 0; col < 8; col++) {
+      const sq = sqN(row, col);
+      const isLight = (row + col) % 2 === 1;
+      const p = boardState[sq];
+      const div = document.createElement('div');
+
+      let cls = 'sq ' + (isLight ? 'light' : 'dark');
+      if (sq === selectedSq) cls += ' sel';
+      if (lastMove?.from === sq) cls += ' lm-from';
+      if (lastMove?.to === sq) cls += ' lm-to';
+      if (sq === checkSq) cls += ' chk';
+      const isHint = legalHints.includes(sq);
+      if (isHint && p) cls += ' cap';
+
+      div.className = cls;
+      div.dataset.sq = sq;
+      div.onclick = () => handleClick(sq);
+
+      if (col === 0) { const s = document.createElement('span'); s.className = 'coord crank'; s.textContent = row + 1; div.appendChild(s); }
+      if (row === 0) { const s = document.createElement('span'); s.className = 'coord cfile'; s.textContent = String.fromCharCode(97 + col); div.appendChild(s); }
+      if (isHint) { const d = document.createElement('div'); d.className = 'dot'; div.appendChild(d); }
+
+      if (p) {
+        const pe = document.createElement('div');
+        pe.className = 'piece ' + (p.color === 'WHITE' ? 'white' : 'black');
+        pe.textContent = GLYPHS[p.color][p.type];
+        div.appendChild(pe);
+      }
+      el.appendChild(div);
+    }
+  }
+}
+
+// ════════════════════════════════════════════════════════
+// CLOCKS
+// ════════════════════════════════════════════════════════
+let wTime = 300, bTime = 300, myTurnClock = true, clockTmr = null;
+
+function clockFmt(s) { s = Math.max(0, Math.floor(s)); return Math.floor(s/60) + ':' + (s % 60 + '').padStart(2,'0'); }
+
+function clockRender() {
+  const we = document.getElementById('w-clock'), be = document.getElementById('b-clock');
+  const bw = document.getElementById('bar-white'), bb = document.getElementById('bar-black');
+  we.textContent = clockFmt(wTime); be.textContent = clockFmt(bTime);
+  we.className = 'clock' + (myTurnClock ? ' active' : '') + (wTime <= 30 && myTurnClock ? ' low' : '');
+  be.className = 'clock' + (!myTurnClock ? ' active' : '') + (bTime <= 30 && !myTurnClock ? ' low' : '');
+  if (bw) bw.classList.toggle('active-bar', myTurnClock);
+  if (bb) bb.classList.toggle('active-bar', !myTurnClock);
+}
+
+function clockStart() {
+  clockStop();
+  clockTmr = setInterval(() => {
+    if (myTurnClock) wTime = Math.max(0, wTime - 1); else bTime = Math.max(0, bTime - 1);
+    clockRender();
+    if (wTime === 0 || bTime === 0) { clockStop(); showGameOver(wTime === 0 ? 'Time Out!' : 'You Win on Time!', wTime === 0 ? 'Your clock ran out.' : 'Opponent clock ran out.', wTime === 0 ? '⏱' : '🏆'); }
+  }, 1000);
+}
+function clockStop() { clearInterval(clockTmr); clockTmr = null; }
+
+// ════════════════════════════════════════════════════════
+// MOVE HISTORY
+// ════════════════════════════════════════════════════════
+let moveList = [];
+
+function moveHistoryAdd(san, color) {
+  moveList.push({ san, color });
+  const el = document.getElementById('move-history');
+  el.innerHTML = '';
+  for (let i = 0; i < moveList.length; i += 2) {
+    const n = i / 2 + 1, w = moveList[i], b = moveList[i + 1];
+    const wc = 'mv-san' + (i === moveList.length - 1 ? ' cur' : '');
+    const bc = b && (i + 1 === moveList.length - 1) ? 'mv-san cur' : 'mv-san';
+    el.innerHTML += `<div class="move-pair"><span class="mv-num">${Math.floor(n)}.</span><span class="${wc}">${w.san}</span><span class="${b ? bc : 'mv-san'}">${b ? b.san : ''}</span></div>`;
+  }
+  el.scrollTop = el.scrollHeight;
+}
+function moveHistoryClear() { moveList = []; document.getElementById('move-history').innerHTML = ''; }
+
+// ════════════════════════════════════════════════════════
+// GAME STATE
+// ════════════════════════════════════════════════════════
+let currentGame = null, currentMode = 'BLITZ', playerTurn = true, pendingPromo = null;
+
+function setStatus(t) {
+  const el = document.getElementById('status-text');
+  if (t.toLowerCase().includes('check')) { el.innerHTML = `<span style="color:var(--red)">${t}</span>`; }
+  else if (t.toLowerCase().includes('win') || t.toLowerCase().includes('checkmate')) { el.innerHTML = `<span style="color:var(--green)">${t}</span>`; }
+  else { el.textContent = t; }
+}
+
+function showLobby() {
+  clockStop(); currentGame = null; playerTurn = true;
+  document.getElementById('lobby').style.display = 'flex';
+  document.getElementById('board-view').classList.add('hidden');
+  setStatus('Awaiting game');
+  moveHistoryClear();
+  showPage('game-page');
+  loadLeaderboard();
+}
+
+async function startGame(mode) {
+  currentMode = mode; playerTurn = true; lastMove = null; checkSq = null;
+  selectedSq = null; legalHints = []; moveHistoryClear(); fenHistory = [];
+
+  const labels = { BULLET:'Bullet 1min', BLITZ:'Blitz 5min', RAPID:'Rapid 10min' };
+  setStatus(`Starting ${labels[mode]}…`);
+
+  const { ok, data } = await api('/api/games', 'POST', { gameMode: mode, vsAi: true });
+  if (!ok) { toast(data.message || 'Failed to create game', 'error'); return; }
+
+  currentGame = data.data;
+  document.getElementById('lobby').style.display = 'none';
+  document.getElementById('board-view').classList.remove('hidden');
+
+  const u = Store.getUser();
+  const uname = u?.username || 'You';
+  const initial = uname[0].toUpperCase();
+
+  document.getElementById('w-name').textContent = uname;
+  document.getElementById('w-sub').textContent = 'Rating ' + (u?.rating || 1200);
+  document.getElementById('w-avatar').textContent = initial;
+  document.getElementById('b-name').textContent = 'Stockfish AI';
+  document.getElementById('b-sub').textContent = 'Level 4 · Black';
+  document.getElementById('w-captured').textContent = '';
+  document.getElementById('b-captured').textContent = '';
+
+  wTime = currentGame.whiteTimeRemaining;
+  bTime = currentGame.blackTimeRemaining;
+  myTurnClock = true; clockRender(); clockStart();
+  parseFen(currentGame.currentFen); fenHistory = [currentGame.currentFen];
+  renderBoard();
+
+  setStatus('Your turn — White');
+  toast('Game started! Good luck ♟', 'info');
+}
+
+// ════════════════════════════════════════════════════════
+// CLICK HANDLER
+// ════════════════════════════════════════════════════════
+function handleClick(sq) {
+  if (!currentGame || currentGame.status === 'COMPLETED') return;
+  if (!playerTurn) return;
+  const p = boardState[sq];
+  if (selectedSq && legalHints.includes(sq)) {
+    const piece = boardState[selectedSq];
+    if (piece?.type === 'PAWN') {
+      const tr = +sq[1];
+      if ((piece.color === 'WHITE' && tr === 8) || (piece.color === 'BLACK' && tr === 1)) {
+        pendingPromo = { from: selectedSq, to: sq }; showPromo(piece.color); return;
+      }
+    }
+    submitMove(selectedSq, sq, null); return;
+  }
+  if (p && p.color === 'WHITE') {
+    selectedSq = sq; legalHints = getMoveHints(sq); renderBoard(); return;
+  }
+  selectedSq = null; legalHints = []; renderBoard();
+}
+
+// ════════════════════════════════════════════════════════
+// SUBMIT MOVE
+// ════════════════════════════════════════════════════════
+async function submitMove(from, to, promotion) {
+  playerTurn = false; selectedSq = null; legalHints = [];
+  setStatus('Engine thinking…');
+
+  const body = { from, to }; if (promotion) body.promotion = promotion;
+  const { ok, data } = await api(`/api/games/${currentGame.gameId}/moves`, 'POST', body);
+
+  if (!ok || !data.data?.valid) {
+    playerTurn = true;
+    toast(data.data?.errorMessage || data.message || 'Invalid move', 'error');
+    renderBoard(); return;
+  }
+
+  const res = data.data;
+  lastMove = { from, to };
+  parseFen(res.fen); fenHistory.push(res.fen);
+  if (res.whiteTimeRemaining != null) { wTime = res.whiteTimeRemaining; bTime = res.blackTimeRemaining; }
+  myTurnClock = false; clockRender();
+  moveHistoryAdd(res.san, 'WHITE');
+
+  const cap = getCaptured();
+  document.getElementById('w-captured').textContent = cap.WHITE.join('');
+  document.getElementById('b-captured').textContent = cap.BLACK.join('');
+  checkSq = null;
+  renderBoard();
+
+  if (res.isCheckmate || res.isStalemate || (res.gameStatus && res.gameStatus === 'COMPLETED')) {
+    clockStop(); handleGameOver(res, 'WHITE'); return;
+  }
+  if (res.isCheck) { checkSq = findKing('BLACK'); toast('Check!', 'info'); }
+
+  if (res.aiMove) {
+    await new Promise(r => setTimeout(r, 400));
+    const ai = res.aiMove;
+    lastMove = { from: ai.from, to: ai.to };
+    parseFen(ai.fen); fenHistory.push(ai.fen);
+    if (ai.whiteTimeRemaining != null) { wTime = ai.whiteTimeRemaining; bTime = ai.blackTimeRemaining; }
+    myTurnClock = true; clockRender();
+    moveHistoryAdd(ai.san, 'BLACK');
+    const cap2 = getCaptured();
+    document.getElementById('w-captured').textContent = cap2.WHITE.join('');
+    document.getElementById('b-captured').textContent = cap2.BLACK.join('');
+    checkSq = null;
+    if (ai.isCheck) { checkSq = findKing('WHITE'); }
+    renderBoard();
+
+    if (ai.isCheckmate || ai.isStalemate || (ai.gameStatus && ai.gameStatus === 'COMPLETED')) {
+      clockStop(); handleGameOver(ai, 'BLACK'); return;
+    }
+    if (ai.isCheck) toast('Check!', 'error', 4000);
+  }
+  playerTurn = true;
+  setStatus(checkSq ? '⚠ Check! Your move' : 'Your turn');
+}
+
+function handleGameOver(result, lastMover) {
+  currentGame.status = 'COMPLETED'; playerTurn = false;
+  let title, msg, icon;
+  if (result.isCheckmate) {
+    const aiWon = (lastMover === 'BLACK' && result.gameResult === 'BLACK_WIN') || (lastMover === 'WHITE' && result.gameResult === 'WHITE_WIN');
+    title = aiWon ? 'Engine Wins' : 'You Win!';
+    msg   = aiWon ? 'Checkmate — better luck next time.' : 'Brilliant play! Checkmate!';
+    icon  = aiWon ? '🤖' : '🏆';
+  } else if (result.isStalemate) {
+    title = 'Draw'; msg = 'Stalemate — no legal moves.'; icon = '🤝';
+  } else {
+    title = 'Game Over'; msg = result.resultReason || ''; icon = '♟';
+  }
+  setStatus(title);
+  showGameOver(title, msg, icon);
+}
+
+function showGameOver(title, msg, icon = '♟') {
+  document.getElementById('go-title').textContent = title;
+  document.getElementById('go-msg').textContent = msg;
+  document.getElementById('go-icon').textContent = icon;
+  openModal('go-modal');
+}
+
+async function resignGame() {
+  if (!currentGame) return;
+  if (confirm('Are you sure you want to resign?')) {
+    const { ok } = await api(`/api/games/${currentGame.gameId}/resign`, 'POST');
+    if (ok) { clockStop(); showGameOver('Resignation', 'You have conceded the game.', '⚑'); }
+  }
+}
+
+function playAgain() { closeModal('go-modal'); startGame(currentMode); }
+
+async function downloadPgn() {
+  if (!currentGame) return;
+  const tok = Store.getToken();
+  const r = await fetch(API + `/api/games/${currentGame.gameId}/pgn`, { headers: tok ? { Authorization: 'Bearer ' + tok } : {} });
+  const pgn = await r.text();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([pgn], { type: 'text/plain' }));
+  a.download = `chess-${currentGame.gameId.substring(0, 8)}.pgn`;
+  a.click();
+  toast('PGN downloaded', 'success');
+}
+
+// ════════════════════════════════════════════════════════
+// PROMOTION
+// ════════════════════════════════════════════════════════
+function showPromo(color) {
+  const pieces = ['QUEEN','ROOK','BISHOP','KNIGHT'];
+  document.getElementById('promo-grid').innerHTML = pieces.map(p =>
+    `<div class="promo-btn" onclick="selectPromo('${p[0]}')">${GLYPHS[color][p]}</div>`
+  ).join('');
+  openModal('promo-modal');
+}
+function selectPromo(piece) {
+  closeModal('promo-modal');
+  if (pendingPromo) { submitMove(pendingPromo.from, pendingPromo.to, piece); pendingPromo = null; }
+}
+
+// ════════════════════════════════════════════════════════
+// PROFILE
+// ════════════════════════════════════════════════════════
+async function showProfile() {
+  showPage('profile-page');
+  const u = Store.getUser(); if (!u) return;
+  const { ok, data } = await api('/api/users/me');
+  if (!ok) { toast('Failed to load profile', 'error'); return; }
+  const pu = data.data;
+  document.getElementById('prof-avatar').textContent = pu.username[0].toUpperCase();
+  document.getElementById('prof-username').textContent = pu.username;
+  document.getElementById('prof-since').textContent = 'Member since ' + fmtDate(pu.createdAt);
+  document.getElementById('s-rating').textContent = pu.rating;
+  document.getElementById('s-played').textContent = pu.gamesPlayed;
+  document.getElementById('s-won').textContent = pu.gamesWon;
+  document.getElementById('s-rate').textContent = pu.gamesPlayed > 0 ? Math.round(pu.gamesWon / pu.gamesPlayed * 100) + '%' : '0%';
+
+  const gh = await api('/api/games/my-games?page=0&size=15');
+  const tbody = document.getElementById('history-body');
+  const games = gh.ok && gh.data.data?.content;
+  if (games && games.length) {
+    tbody.innerHTML = games.map(g => {
+      const iw = g.whitePlayer === pu.username;
+      const opp = iw ? (g.blackPlayer || 'Engine') : (g.whitePlayer || 'Engine');
+      let badge = '';
+      if (g.result === 'IN_PROGRESS') badge = '<span class="badge badge-draw">Live</span>';
+      else if (g.result === 'DRAW') badge = '<span class="badge badge-draw">Draw</span>';
+      else { const won = (g.result === 'WHITE_WIN' && iw) || (g.result === 'BLACK_WIN' && !iw); badge = won ? '<span class="badge badge-win">Win</span>' : '<span class="badge badge-loss">Loss</span>'; }
+      return `<tr><td>${g.gameMode}</td><td>${opp}</td><td>${badge}</td><td>${g.totalMoves || 0}</td><td>${fmtDate(g.completedAt || g.createdAt)}</td></tr>`;
+    }).join('');
+  } else {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:2rem">No games played yet</td></tr>';
+  }
+}
+
+function fmtDate(s) { if (!s) return '—'; return new Date(s).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' }); }
+
+// ════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  if (Store.isAuth()) enterApp();
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const lf = document.getElementById('login-form');
+    if (lf && !lf.classList.contains('hidden')) doLogin();
+    else { const rf = document.getElementById('register-form'); if (rf && !rf.classList.contains('hidden')) doRegister(); }
+  });
+});
+</script>
+
+<!-- External JS hooks (keep your original scripts) -->
+<script src="app.js"></script>
+<script src="board.js"></script>
+<script src="chess.js"></script>
+<script src="ui.js"></script>
+<script src="api.js"></script>
+</body>
+</html>
