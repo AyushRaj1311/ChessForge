@@ -1,16 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { motion } from 'framer-motion';
-import { Play, User, Cpu, Timer, Shield, Info } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Play, User, Cpu, Timer, Shield, Info, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
+import { WS_BASE_URL } from '../utils/constants';
 
 const PlayPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
+  const [findingMatch, setFindingMatch] = useState(false);
   const [aiLevel, setAiLevel] = useState(1);
   const [gameMode, setGameMode] = useState('BLITZ');
   const { user } = useAuth();
   const navigate = useNavigate();
+  const stompClient = useRef<Client | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const socket = new SockJS(WS_BASE_URL);
+    const client = new Client({
+      webSocketFactory: () => socket,
+      connectHeaders: {
+        Authorization: `Bearer ${user.accessToken}`,
+      },
+      onConnect: () => {
+        console.log('Connected to matchmaking socket');
+        client.subscribe('/user/queue/matchmaking', (message) => {
+          const match = JSON.parse(message.body);
+          console.log('Match found!', match);
+          if (match.gameId) {
+            navigate(`/game/${match.gameId}`);
+          }
+        });
+      },
+    });
+
+    client.activate();
+    stompClient.current = client;
+
+    return () => {
+      client.deactivate();
+    };
+  }, [user]);
 
   const handleStartAiGame = async () => {
     setLoading(true);
@@ -36,21 +70,56 @@ const PlayPage: React.FC = () => {
   };
 
   const handleFindMatch = async () => {
-    setLoading(true);
+    setFindingMatch(true);
     try {
       console.log('Joining matchmaking...', { gameMode });
       await axios.post('/api/matchmaking/join', { gameMode });
-      alert("Finding match... We will redirect you once a player is found.");
     } catch (err: any) {
       console.error('Failed to join matchmaking', err);
       alert(`Error joining matchmaking: ${err.response?.data?.message || err.message}`);
-    } finally {
-      setLoading(false);
+      setFindingMatch(false);
+    }
+  };
+
+  const handleCancelMatch = async () => {
+    try {
+      await axios.post('/api/matchmaking/leave');
+      setFindingMatch(false);
+    } catch (err) {
+      console.error('Failed to leave matchmaking', err);
     }
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-12">
+    <div className="max-w-6xl mx-auto px-6 py-12 relative">
+      <AnimatePresence>
+        {findingMatch && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-xl"
+          >
+            <div className="text-center">
+              <div className="w-32 h-32 mx-auto relative mb-8">
+                <div className="absolute inset-0 border-4 border-chess-green/20 rounded-full"></div>
+                <div className="absolute inset-0 border-4 border-chess-green border-t-transparent rounded-full animate-spin"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <User size={48} className="text-chess-green" />
+                </div>
+              </div>
+              <h2 className="text-4xl font-black mb-4">Finding Match...</h2>
+              <p className="text-gray-400 mb-10">Searching for a {gameMode} opponent near your rating ({user?.rating}).</p>
+              <button 
+                onClick={handleCancelMatch}
+                className="btn-secondary py-4 px-10 text-xl text-red-400 hover:bg-red-500/10 hover:border-red-500/20"
+              >
+                Cancel
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="grid lg:grid-cols-2 gap-12">
         {/* Play AI Card */}
         <motion.div 
