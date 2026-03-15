@@ -24,8 +24,12 @@ public class CoreConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Allow any origin (file://, localhost:3000, etc.)
-        config.setAllowedOriginPatterns(List.of("*"));
+        // Allow specific production origins and local development
+        config.setAllowedOriginPatterns(List.of(
+            "http://localhost:3000",
+            "https://chess-forge-eight.vercel.app",
+            "https://*.vercel.app"
+        ));
 
         // Allow all standard HTTP methods
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
@@ -37,7 +41,7 @@ public class CoreConfig {
         config.setExposedHeaders(List.of("Authorization"));
 
         // Allow credentials (cookies / auth headers)
-        config.setAllowCredentials(false); // false when using wildcard origins
+        config.setAllowCredentials(true); 
 
         // Cache preflight for 1 hour
         config.setMaxAge(3600L);

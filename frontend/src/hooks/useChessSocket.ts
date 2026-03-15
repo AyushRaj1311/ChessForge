@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { useAuth } from '../context/AuthContext';
+import { WS_BASE_URL } from '../utils/constants';
 
 interface MoveResponse {
   gameId: string;
@@ -33,7 +34,7 @@ export const useChessSocket = (gameId: string | undefined, onMoveReceived: (move
   useEffect(() => {
     if (!gameId || !user) return;
 
-    const socket = new SockJS('/ws');
+    const socket = new SockJS(WS_BASE_URL);
     const client = new Client({
       webSocketFactory: () => socket,
       connectHeaders: {
