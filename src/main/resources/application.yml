@@ -2,12 +2,12 @@ spring:
   application:
     name: chess-platform
 
-  # ─── MySQL Database ───────────────────────────────────────────────────────────
+  # ─── MySQL Database (or H2 Fallback) ─────────────────────────────────────────
   datasource:
-    url: jdbc:mysql://localhost:3306/chess_platform?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: root          # change to your MySQL Workbench username
-    password: Ayush.2006     # change to your MySQL Workbench password
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${SPRING_DATASOURCE_URL:jdbc:h2:mem:chessdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.h2.Driver}
     hikari:
       maximum-pool-size: 10
       minimum-idle: 2
@@ -17,12 +17,17 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update      # auto-creates / updates tables on startup
-    show-sql: false
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
+    show-sql: ${SPRING_JPA_SHOW_SQL:false}
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
+        dialect: ${SPRING_JPA_DATABASE_PLATFORM:org.hibernate.dialect.H2Dialect}
         format_sql: true
+
+  h2:
+    console:
+      enabled: ${SPRING_H2_CONSOLE_ENABLED:true}
+      path: /h2-console
 
   jackson:
     serialization:
@@ -30,12 +35,22 @@ spring:
     default-property-inclusion: non_null
 
 server:
-  port: 1111
+  port: ${PORT:1111}
 
 # ─── JWT ──────────────────────────────────────────────────────────────────────
 jwt:
-  secret: chess-platform-super-secret-key-that-is-long-enough-for-hs256-algorithm
-  expiration: 86400000
+  secret: ${JWT_SECRET:chess-platform-super-secret-key-that-is-long-enough-for-hs256-algorithm}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+# ─── Management (Actuator) ───────────────────────────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
 
 # ─── Chess Settings ───────────────────────────────────────────────────────────
 chess:
