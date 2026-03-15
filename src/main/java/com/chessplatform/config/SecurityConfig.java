@@ -49,11 +49,12 @@ public class SecurityConfig {
         config.setAllowedOriginPatterns(java.util.List.of(
             "http://localhost:3000",
             "https://chess-forge-eight.vercel.app",
-            "https://*.vercel.app"
+            "https://*.vercel.app",
+            "https://vercel.com"
         ));
         config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));
-        config.setAllowedHeaders(java.util.List.of("*"));
-        config.setExposedHeaders(java.util.List.of("Authorization"));
+        config.setAllowedHeaders(java.util.List.of("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
+        config.setExposedHeaders(java.util.List.of("Authorization", "Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
         

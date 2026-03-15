@@ -54,6 +54,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
             return headerAuth.substring(7);
         }
+        // Also check if token is in a custom header or as a fallback
+        String xAuth = request.getHeader("X-Authorization");
+        if (StringUtils.hasText(xAuth) && xAuth.startsWith("Bearer ")) {
+            return xAuth.substring(7);
+        }
         return null;
     }
 }
