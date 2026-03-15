@@ -25,7 +25,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     axios.defaults.baseURL = API_BASE_URL;
-    axios.defaults.withCredentials = true; // Add this line for CORS with credentials
+    axios.defaults.withCredentials = false; // Changed to false for simpler CORS pattern
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
       const parsedUser = JSON.parse(savedUser);
