@@ -34,15 +34,19 @@ export const useChessSocket = (gameId: string | undefined, onMoveReceived: (move
   useEffect(() => {
     if (!gameId || !user) return;
 
+    console.log('Initializing WebSocket connection for game:', gameId);
     const socket = new SockJS(WS_BASE_URL);
     const client = new Client({
       webSocketFactory: () => socket,
+      // Pass token in connectHeaders for the STOMP CONNECT frame
       connectHeaders: {
         Authorization: `Bearer ${user.accessToken}`,
       },
+      // Also pass token as a query parameter for the initial SockJS handshake
+      brokerURL: `${WS_BASE_URL}?token=${user.accessToken}`,
       onConnect: () => {
         setConnected(true);
-        console.log('Connected to WebSocket');
+        console.log('Connected to WebSocket successfully');
         
         // Subscribe to game moves
         client.subscribe(`/topic/game/${gameId}/move`, (message) => {

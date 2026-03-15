@@ -121,7 +121,17 @@ const GamePage: React.FC = () => {
       if (move) {
         console.log('Local move valid, sending to backend...');
         setFen(game.fen()); // Update board immediately for responsiveness
+        
+        // Fallback: If WebSocket is slow/failed, send via HTTP as well
         sendMove(sourceSquare, targetSquare, 'q');
+        
+        // Try HTTP move if WebSocket isn't confirming
+        axios.post(`/api/games/${gameId}/moves`, {
+          from: sourceSquare,
+          to: targetSquare,
+          promotion: 'q'
+        }).catch(err => console.error('HTTP Move Fallback failed:', err));
+
         return true;
       } else {
         console.warn('Local move invalid according to chess.js');
