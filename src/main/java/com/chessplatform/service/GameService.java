@@ -204,6 +204,9 @@ public class GameService {
         Game savedGame = gameRepository.save(game);
         MoveResponse playerMoveResponse = buildMoveResponse(result, request.getFrom(), request.getTo(), request.getPromotion(), savedGame);
 
+        // Broadcast move before handling AI
+        broadcastMove(gameId, playerMoveResponse);
+
         // Handle AI move
         if (savedGame.getStatus() == GameStatus.IN_PROGRESS && savedGame.isAiGame()) {
             PieceColor aiColor = playerColor.opposite();
@@ -242,15 +245,18 @@ public class GameService {
                     }
 
                     gameRepository.save(savedGame);
-                    playerMoveResponse.setAiMove(buildMoveResponse(aiResult,
+                    MoveResponse aiMoveResp = buildMoveResponse(aiResult,
                         aiChessMove.getFrom().toAlgebraic(),
-                        aiChessMove.getTo().toAlgebraic(), null, savedGame));
+                        aiChessMove.getTo().toAlgebraic(), null, savedGame);
+                    
+                    broadcastMove(gameId, aiMoveResp);
+                    playerMoveResponse.setAiMove(aiMoveResp);
                 }
             }
         }
 
         gameRepository.save(savedGame);
-        broadcastMove(gameId, playerMoveResponse);
+        // broadcastMove(gameId, playerMoveResponse); // Removed, now called above
         return playerMoveResponse;
     }
 

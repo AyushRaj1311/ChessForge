@@ -45,7 +45,7 @@ export const useChessSocket = (gameId: string | undefined, onMoveReceived: (move
         console.log('Connected to WebSocket');
         
         // Subscribe to game moves
-        client.subscribe(`/topic/game/${gameId}`, (message) => {
+        client.subscribe(`/topic/game/${gameId}/move`, (message) => {
           const move = JSON.parse(message.body);
           onMoveReceived(move);
         });
