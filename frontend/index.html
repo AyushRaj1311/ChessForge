@@ -8,6 +8,11 @@
   </head>
   <body class="bg-[#161512] text-white">
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      window.global = window;
+      window.process = { env: { NODE_ENV: 'development' } };
+      window.Buffer = [];
+    </script>
+    <script type="module" src="src/main.tsx"></script>
   </body>
 </html>

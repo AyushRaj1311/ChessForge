@@ -17,7 +17,6 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@types/sockjs-client": "^1.5.4",
-    "@vitejs/plugin-react-swc": "^4.3.0",
     "autoprefixer": "^10.4.27",
     "postcss": "^8.5.8",
     "tailwindcss": "^4.2.1",
@@ -27,6 +26,7 @@
   "dependencies": {
     "@stomp/stompjs": "^7.3.0",
     "@tailwindcss/postcss": "^4.2.1",
+    "@vitejs/plugin-react": "^6.0.1",
     "axios": "^1.13.6",
     "chess.js": "^1.4.0",
     "clsx": "^2.1.1",
