@@ -28,14 +28,15 @@ public class CoreConfig {
         config.setAllowedOriginPatterns(List.of(
             "http://localhost:3000",
             "https://chess-forge-eight.vercel.app",
-            "https://*.vercel.app"
+            "https://*.vercel.app",
+            "*" // Fallback for testing, though specific patterns are safer
         ));
 
         // Allow all standard HTTP methods
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));
 
         // Allow all headers including Authorization
-        config.setAllowedHeaders(List.of("*"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "X-Requested-With", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
 
         // Expose Authorization header in responses
         config.setExposedHeaders(List.of("Authorization"));
