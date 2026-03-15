@@ -15,7 +15,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Controller;
 
-@Controller
+//@Controller
 @RequiredArgsConstructor
 @Slf4j
 public class GameWebSocketHandler {
