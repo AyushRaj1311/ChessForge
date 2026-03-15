@@ -153,23 +153,32 @@ public class GameService {
     @Transactional
     public MoveResponse makeMove(User user, String gameId, MakeMoveRequest request) {
         Game game = findGame(gameId);
+        log.info("Processing move for game {}: {} to {} by user {}", gameId, request.getFrom(), request.getTo(), user.getUsername());
 
         if (game.getStatus() != GameStatus.IN_PROGRESS) {
+            log.warn("Move rejected: Game {} is in status {}", gameId, game.getStatus());
             return MoveResponse.builder().valid(false).errorMessage("Game is not in progress").build();
         }
 
         // Validate it's the player's turn
-        Board board = Board.fromFen(getCurrentFen(game));
+        String currentFen = getCurrentFen(game);
+        Board board = Board.fromFen(currentFen);
         PieceColor playerColor = getPlayerColor(game, user);
+        
+        log.info("Game turn: {}, Player color: {}, FEN: {}", board.getCurrentTurn(), playerColor, currentFen);
+
         if (playerColor == null) {
+            log.warn("Move rejected: User {} is not part of game {}", user.getUsername(), gameId);
             return MoveResponse.builder().valid(false).errorMessage("You are not in this game").build();
         }
         if (board.getCurrentTurn() != playerColor) {
+            log.warn("Move rejected: Not {}'s turn in game {}", playerColor, gameId);
             return MoveResponse.builder().valid(false).errorMessage("Not your turn").build();
         }
 
         MoveResult result = chessEngine.makeMove(board, request.getFrom(), request.getTo(), request.getPromotion());
         if (!result.isValid()) {
+            log.warn("Move rejected: Engine says invalid move ({} to {}) - {}", request.getFrom(), request.getTo(), result.getErrorMessage());
             return MoveResponse.builder().valid(false).errorMessage(result.getErrorMessage()).build();
         }
 

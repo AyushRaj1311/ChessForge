@@ -111,17 +111,23 @@ const GamePage: React.FC = () => {
     if ((turn === 'w' && !isWhite) || (turn === 'b' && isWhite)) return false;
 
     try {
+      console.log('Attempting move:', { from: sourceSquare, to: targetSquare });
       const move = game.move({
         from: sourceSquare,
         to: targetSquare,
-        promotion: 'q', // Always promote to queen for simplicity in this UI
+        promotion: 'q',
       });
 
       if (move) {
+        console.log('Local move valid, sending to backend...');
+        setFen(game.fen()); // Update board immediately for responsiveness
         sendMove(sourceSquare, targetSquare, 'q');
         return true;
+      } else {
+        console.warn('Local move invalid according to chess.js');
       }
     } catch (e) {
+      console.error('Error in onDrop:', e);
       return false;
     }
     return false;
