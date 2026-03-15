@@ -15,14 +15,21 @@ const PlayPage: React.FC = () => {
   const handleStartAiGame = async () => {
     setLoading(true);
     try {
+      console.log('Starting AI game...', { gameMode, aiLevel });
       const response = await axios.post('/api/games', {
         gameMode,
         vsAi: true,
         aiLevel
       });
-      navigate(`/game/${response.data.data.gameId}`);
-    } catch (err) {
+      console.log('Game created:', response.data);
+      if (response.data?.data?.gameId) {
+        navigate(`/game/${response.data.data.gameId}`);
+      } else {
+        alert('Game created but no ID returned');
+      }
+    } catch (err: any) {
       console.error('Failed to start AI game', err);
+      alert(`Error starting game: ${err.response?.data?.message || err.message}`);
     } finally {
       setLoading(false);
     }
@@ -31,12 +38,12 @@ const PlayPage: React.FC = () => {
   const handleFindMatch = async () => {
     setLoading(true);
     try {
+      console.log('Joining matchmaking...', { gameMode });
       await axios.post('/api/matchmaking/join', { gameMode });
-      // In a real app, we'd wait for a socket event, but for now we can redirect to a waiting screen
-      // Or just show a finding match overlay
-      alert("Finding match... This will use WebSockets in the background.");
-    } catch (err) {
+      alert("Finding match... We will redirect you once a player is found.");
+    } catch (err: any) {
       console.error('Failed to join matchmaking', err);
+      alert(`Error joining matchmaking: ${err.response?.data?.message || err.message}`);
     } finally {
       setLoading(false);
     }
