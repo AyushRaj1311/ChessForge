@@ -25,7 +25,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     axios.defaults.baseURL = API_BASE_URL;
-    axios.defaults.withCredentials = false; // Changed to false for simpler CORS pattern
+    axios.defaults.withCredentials = false;
+    
+    // Global response interceptor to handle session expiry (401/403)
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+          console.warn('Session expired or user not found. Logging out...');
+          logout();
+          window.location.href = '/login';
+        }
+        return Promise.reject(error);
+      }
+    );
+
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
       const parsedUser = JSON.parse(savedUser);
