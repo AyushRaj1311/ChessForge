@@ -4,15 +4,9 @@ spring:
 
   # ─── Database Configuration ─────────────────────────────────────────────────
   datasource:
-    # Default to H2 for instant trial, but easily switch to MySQL via environment variables
     url: ${SPRING_DATASOURCE_URL:jdbc:h2:mem:chessdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
     username: ${SPRING_DATASOURCE_USERNAME:sa}
     password: ${SPRING_DATASOURCE_PASSWORD:}
-    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.h2.Driver}
-    # To use MySQL locally, you can also uncomment/set these:
-    # url: jdbc:mysql://localhost:3306/chess_platform?createDatabaseIfNotExist=true&useSSL=false
-    # username: root
-    # password: YourPassword
     hikari:
       maximum-pool-size: 10
       minimum-idle: 2
@@ -21,7 +15,6 @@ spring:
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
     show-sql: ${SPRING_JPA_SHOW_SQL:false}
-    # Hibernate auto-detects the dialect, so we don't force H2Dialect here
     properties:
       hibernate:
         format_sql: true
@@ -38,6 +31,7 @@ spring:
 
 server:
   port: ${PORT:1111}
+  address: 0.0.0.0
 
 # ─── JWT ──────────────────────────────────────────────────────────────────────
 jwt:
