@@ -18,6 +18,7 @@ const GamePage: React.FC = () => {
   const [blackTimer, setBlackTimer] = useState(0);
   const [lastMove, setLastMove] = useState<any>(null);
   const [gameOver, setGameOver] = useState<any>(null);
+  const [optionSquares, setOptionSquares] = useState({});
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -29,9 +30,12 @@ const GamePage: React.FC = () => {
   const onMoveReceived = useCallback((moveResp: any) => {
     if (moveResp.valid === false) return;
     
-    const newGame = new Chess(moveResp.fen);
-    setGame(newGame);
-    setFen(moveResp.fen);
+    setGame((prevGame) => {
+      const newGame = new Chess(moveResp.fen);
+      setFen(newGame.fen());
+      return newGame;
+    });
+    
     setLastMove(moveResp);
     setWhiteTimer(moveResp.whiteTimeRemaining);
     setBlackTimer(moveResp.blackTimeRemaining);
@@ -103,6 +107,30 @@ const GamePage: React.FC = () => {
     return () => clearInterval(interval);
   }, [gameData, game, gameOver]);
 
+  function onSquareClick(square: string) {
+    // Check if it's the player's turn
+    const turn = game.turn();
+    if ((turn === 'w' && !isWhite) || (turn === 'b' && isWhite)) {
+      setOptionSquares({});
+      return;
+    }
+
+    const moves = game.moves({ square: square as any, verbose: true });
+    if (moves.length === 0) {
+      setOptionSquares({});
+      return;
+    }
+
+    const newOptions = moves.reduce((acc: any, move: any) => {
+      acc[move.to] = {
+        background: 'radial-gradient(circle, rgba(0,0,0,.1) 25%, transparent 25%)',
+        borderRadius: '50%'
+      };
+      return acc;
+    }, {});
+    setOptionSquares({ [square]: { background: 'rgba(255, 255, 0, 0.4)' }, ...newOptions });
+  }
+
   const onDrop = (sourceSquare: string, targetSquare: string) => {
     if (gameOver) return false;
 
@@ -121,6 +149,7 @@ const GamePage: React.FC = () => {
       if (move) {
         console.log('Local move valid, sending to backend...');
         setFen(game.fen()); // Update board immediately for responsiveness
+        setOptionSquares({}); // Clear highlights
         
         // Fallback: If WebSocket is slow/failed, send via HTTP as well
         sendMove(sourceSquare, targetSquare, 'q');
@@ -183,6 +212,8 @@ const GamePage: React.FC = () => {
               customDarkSquareStyle={{ backgroundColor: '#779556' }}
               customLightSquareStyle={{ backgroundColor: '#ebecd0' }}
               animationDuration={200}
+              onSquareClick={onSquareClick}
+              customSquareStyles={optionSquares}
             />
           </div>
         </div>
