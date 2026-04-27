@@ -27,8 +27,9 @@ public class UserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByUsername(username)
-            .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+        String normalized = username == null ? "" : username.trim();
+        return userRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(normalized, normalized)
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
     public UserProfileResponse getUserProfile(Long userId) {

@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { Mail, Lock, LogIn, AlertCircle, User } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
-  const [username, setUsername] = useState('');
+  const [usernameOrEmail, setUsernameOrEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -18,7 +18,7 @@ const LoginPage: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      const response = await axios.post('/api/auth/login', { username, password });
+      const response = await axios.post('/api/auth/login', { username: usernameOrEmail.trim(), password });
       login(response.data.data.accessToken, response.data.data);
       navigate('/play');
     } catch (err: any) {
@@ -56,16 +56,16 @@ const LoginPage: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-400 tracking-wider uppercase ml-1">Username</label>
+            <label className="text-sm font-bold text-gray-400 tracking-wider uppercase ml-1">Username or Email</label>
             <div className="relative group">
               <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-chess-green transition-colors" size={20} />
               <input 
                 type="text" 
                 required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={usernameOrEmail}
+                onChange={(e) => setUsernameOrEmail(e.target.value)}
                 className="w-full bg-[#161512] border border-white/10 rounded-xl py-4 pl-12 pr-4 focus:outline-none focus:border-chess-green focus:ring-1 focus:ring-chess-green transition-all"
-                placeholder="Enter your username"
+                placeholder="Enter username or email"
               />
             </div>
           </div>
