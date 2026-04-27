@@ -20,21 +20,30 @@ const PlayPage: React.FC = () => {
   useEffect(() => {
     if (!user) return;
 
-    const socket = new SockJS(WS_BASE_URL);
     const client = new Client({
-      webSocketFactory: () => socket,
+      webSocketFactory: () => new SockJS(`${WS_BASE_URL}?token=${encodeURIComponent(user.accessToken)}`),
       connectHeaders: {
         Authorization: `Bearer ${user.accessToken}`,
       },
+      reconnectDelay: 3000,
       onConnect: () => {
         console.log('Connected to matchmaking socket');
         client.subscribe('/user/queue/matchmaking', (message) => {
           const match = JSON.parse(message.body);
           console.log('Match found!', match);
           if (match.gameId) {
+            setFindingMatch(false);
             navigate(`/game/${match.gameId}`);
           }
         });
+      },
+      onStompError: (frame) => {
+        console.error('Matchmaking STOMP error:', frame);
+        setFindingMatch(false);
+      },
+      onWebSocketError: (event) => {
+        console.error('Matchmaking WebSocket error:', event);
+        setFindingMatch(false);
       },
     });
 

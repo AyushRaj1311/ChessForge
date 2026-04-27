@@ -56,7 +56,7 @@ The database URL is already set to `localhost:3306/chess_platform` which matches
 - Watch the console – you should see:
 
 ```
-Started ChessPlatformApplication on port 8080
+Started ChessPlatformApplication on port 1111
 ```
 
 Spring Boot will automatically create/update all database tables on startup.
@@ -69,7 +69,7 @@ Open your browser or Postman:
 
 ### Register a user
 ```
-POST http://localhost:8080/api/auth/register
+POST http://localhost:1111/api/auth/register
 Content-Type: application/json
 
 {
@@ -81,7 +81,7 @@ Content-Type: application/json
 
 ### Login
 ```
-POST http://localhost:8080/api/auth/login
+POST http://localhost:1111/api/auth/login
 Content-Type: application/json
 
 {
@@ -93,7 +93,7 @@ Copy the `accessToken` from the response.
 
 ### Create a game vs AI
 ```
-POST http://localhost:8080/api/games
+POST http://localhost:1111/api/games
 Authorization: Bearer <your_token>
 Content-Type: application/json
 
@@ -102,7 +102,7 @@ Content-Type: application/json
 
 ### Make a move
 ```
-POST http://localhost:8080/api/games/{gameId}/moves
+POST http://localhost:1111/api/games/{gameId}/moves
 Authorization: Bearer <your_token>
 Content-Type: application/json
 
@@ -111,7 +111,7 @@ Content-Type: application/json
 
 ### View leaderboard (no login needed)
 ```
-GET http://localhost:8080/api/leaderboard
+GET http://localhost:1111/api/leaderboard
 ```
 
 ---

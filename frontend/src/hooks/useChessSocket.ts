@@ -35,15 +35,12 @@ export const useChessSocket = (gameId: string | undefined, onMoveReceived: (move
     if (!gameId || !user) return;
 
     console.log('Initializing WebSocket connection for game:', gameId);
-    const socket = new SockJS(WS_BASE_URL);
     const client = new Client({
-      webSocketFactory: () => socket,
-      // Pass token in connectHeaders for the STOMP CONNECT frame
+      webSocketFactory: () => new SockJS(`${WS_BASE_URL}?token=${encodeURIComponent(user.accessToken)}`),
       connectHeaders: {
         Authorization: `Bearer ${user.accessToken}`,
       },
-      // Also pass token as a query parameter for the initial SockJS handshake
-      brokerURL: `${WS_BASE_URL}?token=${user.accessToken}`,
+      reconnectDelay: 3000,
       onConnect: () => {
         setConnected(true);
         console.log('Connected to WebSocket successfully');
@@ -66,6 +63,9 @@ export const useChessSocket = (gameId: string | undefined, onMoveReceived: (move
       },
       onStompError: (frame) => {
         console.error('STOMP Error:', frame);
+      },
+      onWebSocketError: (event) => {
+        console.error('WebSocket error:', event);
       },
     });
 
